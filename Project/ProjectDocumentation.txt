@@ -1,0 +1,66 @@
+Graph coloring
+	by Breje Mihai-Paul, Catargiu Georgiana Ecaterina
+	
+In a nutshell, graph coloring represents finding a way of coloring the vertices of a graph such that no two adjacent vertices are of the same color.
+
+Our solution for this problem was done in two ways:
+	- using multithreading: Java implementation with a thread pool
+	- using MPI: mpich cpp implementation
+
+===================================================================================
+
+The algorithms:
+	For MPI:
+		The approach: 
+			used for this was pretty much the Jones-Plassmann algorithm, splitting the graph in subgraphs that can be manipulated on "almost" independent processators, making use of randomized weights and using an optimal coloring (using the smallest possible color available)
+		
+		The synchronization:
+			few synchronization mechanism were used, it relied a lot on the algorithm, since only if the node (contained in the <x> processator) is of the largest weight in its vicinity (can be shared with other processators) it will be colored: if 2 neighbouring nodes are both uncolored, only the "heaviest" node will get colored at a pass, meaning no neighbouring write-write (with same color) conflicts. Processators will sync, blocking Gather Send and Bcast Recv at each pass (having at max, total_vertices number of passes)
+
+	For Multithreaded:
+		The approach:
+			used for this part of the project is the basic idea assigning colors to each vertex of a graph G such that no adjacent vertices get same color minimizing the number of colors while coloring our graph graph.
+
+		The synchronization:
+			for the synchronization, I chose a thread pool aproach that is initiated in the constructor of the graph and I submit a new runnable task for each element of the independent set in order to do the coloring part with minimum resources.
+
+===================================================================================
+
+Performance measurements:
+	
+For 10 iterations on 5 vertices and 8 edges:
+	MPI 8 nodes average milliseconds=0.005147333299999999
+	MPI 6 nodes average milliseconds=0.0007981060999999997
+	Multithreaded average milliseconds=0.016664739999999997
+	
+For 10 iterations on 20 vertices and 130 edges:
+	MPI 8 nodes average milliseconds=0.0132380647
+	MPI 6 nodes average milliseconds=0.0014421704000000001
+	Multithreaded average milliseconds=0.021900199999999998
+
+For 10 iterations on 500 vertices and 56787 edges:
+	MPI 8 nodes average milliseconds=0.6459281000000001
+	MPI 6 nodes average milliseconds=0.4740553
+	Multithreaded average milliseconds=0.56575336
+
+For 10 iterations on 1500 vertices and 789541 edges:
+	MPI 8 nodes average milliseconds=12.401762000000002
+	MPI 6 nodes average milliseconds=10.966013
+	Multithreaded average milliseconds=12.203244399999999
+	
+	MPI 14 nodes 2 hosts average millisecond = 17.9996 ( Internet connection between the hosts was a certain bottleneck ~4Mbps, didn't continue testing it further for this reason)
+
+For 5 iterations on 2500 vertices and 2530480 edges:
+	MPI 8 nodes average milliseconds=47.23214
+	MPI 6 nodes average milliseconds=39.32332
+	Multithreaded average milliseconds=57.91010845999999
+
+For 1 iterations on 7000 vertices and 11153680 edges:
+	MPI 8 nodes average milliseconds=31.4708
+	MPI 6 nodes average milliseconds=30.2284
+	Multithreaded average milliseconds=67.4403087
+
+For 1 iterations on 10000 vertices and 21624588 edges:
+	MPI 8 nodes average milliseconds=57.9306
+	MPI 6 nodes average milliseconds=65.0365
+	Multithreaded average milliseconds=140.2138326
